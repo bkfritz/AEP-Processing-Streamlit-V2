@@ -477,28 +477,38 @@ def main():
             adj_list = aep_fracs['Adj'].unique()
             # Drop nan values
             adj_list = adj_list[~pd.isnull(adj_list)]
-            # Write adjuvant names to screen
-            st.write("Adjuvants in current data set include:")
-            st.write(adj_list)
-
-            st.write("All AEP Results for Adjuvants in Current Worksheet:")
-            st.write(aep_fracs)
 
             # Allow user to download CSV file with AEP results for all adjuvants in current worksheet
             st.markdown(dataframe_to_csv_download_link(aep_fracs), unsafe_allow_html=True)
 
-            # Generate the figures
-            figs = plot_figures(aep_fracs, adj_list)
-            for i, fig in enumerate(figs):
+            # Show a list of the adjuvants in the data, and ask user to select one for which to develop plot and summary data for download.
+            adjuvant = st.selectbox("Select Adjuvant", adj_list)
+            if adjuvant:
+                # Filter data by selected adjuvant
+                filtered_data = getAdjuvantData(aep_fracs, adjuvant)
+                # Create figure
+                fig = createAdjuvantAEPRatingFigure(filtered_data, adjuvant)
                 st.write(fig)
-                
-                # Download a single plot image
+                # Download the figure
                 img_buffer = io.BytesIO()
                 fig.savefig(img_buffer, format=image_format)
                 img_buffer.seek(0)
                 img_base64 = base64.b64encode(img_buffer.read()).decode('ascii')
-                href = f'<a href="data:image/{image_format};base64,{img_base64}" download="{adj_list[i]}.{image_format}">Download {adj_list[i]} Plot</a>'
+                href = f'<a href="data:image/{image_format};base64,{img_base64}" download="{adjuvant}.{image_format}">Download {adjuvant} Plot</a>'
                 st.markdown(href, unsafe_allow_html=True)
+
+            # Generate the figures
+            # figs = plot_figures(aep_fracs, adj_list)
+            # for i, fig in enumerate(figs):
+            #     st.write(fig)
+                
+            #     # Download a single plot image
+            #     img_buffer = io.BytesIO()
+            #     fig.savefig(img_buffer, format=image_format)
+            #     img_buffer.seek(0)
+            #     img_base64 = base64.b64encode(img_buffer.read()).decode('ascii')
+            #     href = f'<a href="data:image/{image_format};base64,{img_base64}" download="{adj_list[i]}.{image_format}">Download {adj_list[i]} Plot</a>'
+            #     st.markdown(href, unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()
